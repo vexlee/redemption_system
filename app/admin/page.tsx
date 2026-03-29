@@ -103,7 +103,7 @@ function AdminPageInner() {
                     setToast(`New redemption at ${storeName}`)
                 }
             )
-            .subscribe((status) => setRealtimeConnected(status === "SUBSCRIBED"))
+            .subscribe((status: string) => setRealtimeConnected(status === "SUBSCRIBED"))
         return () => { supabase.removeChannel(channel) }
     }, [])
 
