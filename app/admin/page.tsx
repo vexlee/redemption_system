@@ -87,7 +87,7 @@ function AdminPageInner() {
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "redemptions" },
                 async (payload: { new: Record<string, unknown> }) => {
-                    const rec = payload.new as RedemptionRow
+                    const rec = payload.new as unknown as RedemptionRow
                     // Only update if this redemption belongs to the active program
                     if (rec.program_id !== selectedProgramIdRef.current) return
                     const { data } = await supabase
