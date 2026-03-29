@@ -58,7 +58,6 @@ function RedeemForm() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [storeName, setStoreName] = useState<string | null>(null);
-    const [programId, setProgramId] = useState<string | null>(null);
     const [mokinClicked, setMokinClicked] = useState(false);
     const [gajetoClicked, setGajetoClicked] = useState(false);
 
@@ -74,33 +73,22 @@ function RedeemForm() {
 
     // Fetch store name + Instagram config on mount
     useEffect(() => {
+        fetch("/api/config")
+            .then((r) => r.json())
+            .then((data) => setIgConfig(data))
+            .catch(() => { });
+
         if (storeId) {
             supabase
                 .from("stores")
-                .select("name, program_id")
+                .select("name")
                 .eq("id", storeId)
                 .single()
                 .then(({ data, error }) => {
-                    if (data && !error) {
-                        setStoreName(data.name);
-                        setProgramId(data.program_id);
-                        fetch(`/api/config?program_id=${data.program_id}`)
-                            .then((r) => r.json())
-                            .then((cfg) => setIgConfig(cfg))
-                            .catch(() => { });
-                    } else {
-                        fetch("/api/config")
-                            .then((r) => r.json())
-                            .then((cfg) => setIgConfig(cfg))
-                            .catch(() => { });
-                    }
+                    if (data && !error) setStoreName(data.name);
                     setStoreNameLoading(false);
                 });
         } else {
-            fetch("/api/config")
-                .then((r) => r.json())
-                .then((data) => setIgConfig(data))
-                .catch(() => { });
             setStoreNameLoading(false);
         }
     }, [storeId]);
@@ -120,9 +108,8 @@ function RedeemForm() {
         debounceRef.current = setTimeout(async () => {
             setCheckingDuplicate(true);
             try {
-                const programParam = programId ? `&program_id=${encodeURIComponent(programId)}` : "";
                 const res = await fetch(
-                    `/api/check-duplicate?email=${encodeURIComponent(trimmedEmail)}&phone=${encodeURIComponent(trimmedPhone)}${programParam}`
+                    `/api/check-duplicate?email=${encodeURIComponent(trimmedEmail)}&phone=${encodeURIComponent(trimmedPhone)}`
                 );
                 const data = await res.json();
                 setDuplicateWarning(!!data.duplicate);
@@ -330,8 +317,8 @@ function RedeemForm() {
                         {duplicateWarning && !checkingDuplicate && (
                             <div className="redeem-alert-warn animate-scale-in">
                                 <AlertCircle style={{ width: "1rem", height: "1rem", color: "#F59E0B", flexShrink: 0, marginTop: "0.125rem" }} />
-                                <p style={{ fontSize: "0.8125rem", color: "#FBBF24", lineHeight: 1.5 }}>
-                                    This email and phone number have already been used to redeem an offer for this program. Each combination can only be used once per program.
+                                <p style={{ fontSize: "0.8125rem", color: "#fb2724ff", lineHeight: 1.5 }}>
+                                    This email and phone number have already been used to redeem an offer. Each combination can only be used once.
                                 </p>
                             </div>
                         )}
@@ -400,7 +387,7 @@ function RedeemForm() {
 <hr></hr>
                         {/* Privacy disclaimer */}
                         <p style={{ fontSize: "0.75rem", color: "rgba(13, 11, 11, 0.45)", textAlign: "center", marginTop: "0.75rem", lineHeight: 1.5 }}>
-                            By claiming, you consent to your personal data (name, email, phone) being collected and retained solely by Unipro Global Sdn Bhd for redemption verification purposes.<br></br>Each email and phone number can only be used once per program.
+                            By claiming, you consent to your personal data (name, email, phone) being collected and retained solely by Unipro Global Sdn Bhd for redemption verification purposes.<br></br>Each email and phone number can only be used once.
                         </p>
                     </form>
 
