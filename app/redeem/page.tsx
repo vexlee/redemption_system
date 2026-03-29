@@ -84,7 +84,7 @@ function RedeemForm() {
                 .select("name")
                 .eq("id", storeId)
                 .single()
-                .then(({ data, error }) => {
+                .then(({ data, error }: { data: { name: string } | null, error: unknown }) => {
                     if (data && !error) setStoreName(data.name);
                     setStoreNameLoading(false);
                 });
