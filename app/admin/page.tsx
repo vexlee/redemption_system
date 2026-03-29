@@ -86,7 +86,7 @@ function AdminPageInner() {
             .on(
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "redemptions" },
-                async (payload) => {
+                async (payload: { new: Record<string, unknown> }) => {
                     const rec = payload.new as RedemptionRow
                     // Only update if this redemption belongs to the active program
                     if (rec.program_id !== selectedProgramIdRef.current) return
