@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Temporary and local files
+tmp-app/
+tmp-fix.py
+.claude/
+
