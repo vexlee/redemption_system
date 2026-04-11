@@ -250,7 +250,7 @@ function RedeemForm() {
                         alt="Program Logo"
                         style={{ width: "auto", height: "7.5rem", objectFit: "contain", marginBottom: "1.25rem", display: "block", marginLeft: "auto", marginRight: "auto" }}
                     />
-                    <h1>Redeem Your Offer</h1>
+                    <h1>Redeem Your 20W MOKiN Charger</h1>
                     {storeName ? (
                         <p className="store-name">at {storeName}</p>
                     ) : storeNameLoading ? (
@@ -259,7 +259,7 @@ function RedeemForm() {
                         <div style={{ height: "1.5rem" }} />
                     )}
                     <p className="subtitle">
-                        Enter your details below to claim your exclusive reward.
+                        Enter your details below to claim your exclusive offer or MOKiN 20W Charger.
                     </p>
                 </div>
 
@@ -398,8 +398,8 @@ function RedeemForm() {
                                 </>
                             )}
                         </button>
-<br></br>
-<hr></hr>
+                        <br></br>
+                        <hr></hr>
                         {/* Privacy disclaimer */}
                         <p style={{ fontSize: "0.75rem", color: "rgba(13, 11, 11, 0.45)", textAlign: "center", marginTop: "0.75rem", lineHeight: 1.5 }}>
                             By claiming, you consent to your personal data (name, email, phone) being collected and retained solely by Unipro Global Sdn Bhd for redemption verification purposes.<br></br>Each email and phone number can only be used once.
