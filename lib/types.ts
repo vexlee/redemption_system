@@ -7,6 +7,7 @@ export interface Program {
     instagram_mokin_label?: string
     instagram_gajeto_url?: string
     instagram_gajeto_label?: string
+    icon_url?: string
     created_at: string
 }
 

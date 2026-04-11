@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
             const { data } = await db
                 .from("programs")
                 .select(
-                    "instagram_mokin_url, instagram_mokin_label, instagram_gajeto_url, instagram_gajeto_label"
+                    "instagram_mokin_url, instagram_mokin_label, instagram_gajeto_url, instagram_gajeto_label, icon_url"
                 )
                 .eq("id", programId)
                 .single()
@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
                     url: data.instagram_gajeto_url || DEFAULTS.gajeto.url,
                     label: data.instagram_gajeto_label || DEFAULTS.gajeto.label,
                 },
+                icon_url: data.icon_url || null,
             })
         }
 

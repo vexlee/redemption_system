@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
     Plus,
     Pencil,
@@ -11,6 +11,8 @@ import {
     AlertCircle,
     Layers,
     ArrowRight,
+    Upload,
+    ImageOff,
 } from "lucide-react"
 import { Modal } from "./Modal"
 import type { Program, StoreData, RedemptionRow } from "@/lib/types"
@@ -74,17 +76,79 @@ export function ProgramsPanel({
     const [editError, setEditError] = useState("")
     const [editSaving, setEditSaving] = useState(false)
 
+    // Icon upload state
+    const [iconPreview, setIconPreview] = useState<string | null>(null)
+    const [iconFile, setIconFile] = useState<File | null>(null)
+    const [iconUploading, setIconUploading] = useState(false)
+    const [iconError, setIconError] = useState("")
+    const [removingIcon, setRemovingIcon] = useState(false)
+    const iconInputRef = useRef<HTMLInputElement>(null)
+
     const startEdit = (p: Program) => {
         setEditingId(p.id)
         setEditName(p.name)
         setEditDescription(p.description || "")
         setEditError("")
+        setIconPreview(p.icon_url || null)
+        setIconFile(null)
+        setIconError("")
+    }
+
+    const handleIconSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (file.size > 2 * 1024 * 1024) {
+            setIconError("File exceeds 2 MB limit.")
+            return
+        }
+        setIconError("")
+        setIconFile(file)
+        setIconPreview(URL.createObjectURL(file))
+    }
+
+    const uploadIcon = async (programId: string): Promise<string | null> => {
+        if (!iconFile) return null
+        setIconUploading(true)
+        const fd = new FormData()
+        fd.append("icon", iconFile)
+        const res = await fetch(`/api/admin/programs/${programId}/icon`, {
+            method: "POST",
+            body: fd,
+        })
+        setIconUploading(false)
+        if (!res.ok) {
+            const data = await res.json()
+            setIconError(data.error || "Icon upload failed.")
+            return null
+        }
+        const data = await res.json()
+        return data.icon_url as string
+    }
+
+    const removeIcon = async (programId: string) => {
+        setRemovingIcon(true)
+        await fetch(`/api/admin/programs/${programId}/icon`, { method: "DELETE" })
+        setRemovingIcon(false)
+        setIconPreview(null)
+        setIconFile(null)
+        onRefresh()
     }
 
     const saveEdit = async () => {
         if (!editingId || !editName.trim()) return
         setEditSaving(true)
         setEditError("")
+        setIconError("")
+
+        // Upload icon first if a new file was chosen
+        if (iconFile) {
+            const url = await uploadIcon(editingId)
+            if (!url) {
+                setEditSaving(false)
+                return
+            }
+        }
+
         const res = await fetch(`/api/admin/programs/${editingId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -95,6 +159,7 @@ export function ProgramsPanel({
             setEditError(data.error || "Failed to save")
         } else {
             setEditingId(null)
+            setIconFile(null)
             onRefresh()
         }
         setEditSaving(false)
@@ -189,20 +254,67 @@ export function ProgramsPanel({
                                             placeholder="Description (optional)"
                                             rows={2}
                                         />
+
+                                        {/* Icon upload */}
+                                        <div className="space-y-2">
+                                            <p className="text-[12px] text-[#71717a] font-medium">Program Icon</p>
+                                            <div className="flex items-center gap-3">
+                                                {/* Preview */}
+                                                <div className="w-14 h-14 rounded-xl bg-[#18181b] border border-[#333] flex items-center justify-center overflow-hidden shrink-0">
+                                                    {iconPreview ? (
+                                                        <img src={iconPreview} alt="icon preview" className="w-full h-full object-contain p-1" />
+                                                    ) : (
+                                                        <ImageOff className="w-5 h-5 text-[#52525b]" />
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                                                    <input
+                                                        ref={iconInputRef}
+                                                        type="file"
+                                                        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                                        className="hidden"
+                                                        onChange={handleIconSelect}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => iconInputRef.current?.click()}
+                                                        disabled={iconUploading}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#18181b] border border-[#333] hover:border-orange-500/50 text-[#d4d4d8] text-[12px] font-medium transition-colors disabled:opacity-50"
+                                                    >
+                                                        <Upload className="w-3.5 h-3.5" />
+                                                        {iconPreview ? "Change Icon" : "Upload Icon"}
+                                                    </button>
+                                                    {iconPreview && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeIcon(program.id)}
+                                                            disabled={removingIcon}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#18181b] border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 text-red-400 text-[12px] font-medium transition-colors disabled:opacity-50"
+                                                        >
+                                                            {removingIcon ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <p className="text-[11px] text-[#52525b]">PNG, JPEG, WebP, GIF or SVG · max 2 MB</p>
+                                            {iconError && <p className="text-[12px] text-red-400">{iconError}</p>}
+                                        </div>
+
                                         {editError && (
                                             <p className="text-[12px] text-red-400">{editError}</p>
                                         )}
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={saveEdit}
-                                                disabled={editSaving}
+                                                disabled={editSaving || iconUploading}
                                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-[13px] font-medium transition-colors disabled:opacity-50"
                                             >
-                                                {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                                {(editSaving || iconUploading) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                                 Save
                                             </button>
                                             <button
-                                                onClick={() => setEditingId(null)}
+                                                onClick={() => { setEditingId(null); setIconFile(null); setIconPreview(null) }}
                                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#18181b] border border-[#333] text-[#d4d4d8] hover:bg-[#2a2a2c] text-[13px] font-medium transition-colors"
                                             >
                                                 <X className="w-4 h-4" /> Cancel
@@ -212,8 +324,12 @@ export function ProgramsPanel({
                                 ) : (
                                     <>
                                         <div className="flex items-start gap-4 mb-5">
-                                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border transition-colors ${isActive ? "bg-orange-500/15 border-orange-500/30" : "bg-[#18181b] border-[#333] group-hover:border-orange-500/20"}`}>
-                                                <Layers className={`w-5 h-5 transition-colors ${isActive ? "text-orange-400" : "text-[#d4d4d8] group-hover:text-orange-400"}`} />
+                                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border transition-colors overflow-hidden ${isActive ? "bg-orange-500/15 border-orange-500/30" : "bg-[#18181b] border-[#333] group-hover:border-orange-500/20"}`}>
+                                                {program.icon_url ? (
+                                                    <img src={program.icon_url} alt={program.name} className="w-full h-full object-contain p-1.5" />
+                                                ) : (
+                                                    <Layers className={`w-5 h-5 transition-colors ${isActive ? "text-orange-400" : "text-[#d4d4d8] group-hover:text-orange-400"}`} />
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">

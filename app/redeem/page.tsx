@@ -17,12 +17,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-interface InstagramConfig {
+interface ProgramConfig {
     mokin: { url: string; label: string };
     gajeto: { url: string; label: string };
+    icon_url?: string | null;
 }
 
-const DEFAULT_IG: InstagramConfig = {
+const DEFAULT_CONFIG: ProgramConfig = {
     mokin: {
         url: "https://www.instagram.com/aukey.malaysia?igsh=eDY5ZWZ1M2ZhcHV5",
         label: "Mokin Malaysia",
@@ -31,6 +32,7 @@ const DEFAULT_IG: InstagramConfig = {
         url: "https://www.instagram.com/gajetomalaysia?igsh=MWVyYm9ldWppbm5raA==",
         label: "Gajeto Malaysia",
     },
+    icon_url: null,
 };
 
 /* SVG wave separator between cream header and green body */
@@ -66,29 +68,42 @@ function RedeemForm() {
     const [checkingDuplicate, setCheckingDuplicate] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Instagram config (dynamic from admin settings)
-    const [igConfig, setIgConfig] = useState<InstagramConfig>(DEFAULT_IG);
+    // Program config (Instagram links + custom icon)
+    const [igConfig, setIgConfig] = useState<ProgramConfig>(DEFAULT_CONFIG);
 
     const [storeNameLoading, setStoreNameLoading] = useState(true);
 
     // Fetch store name + Instagram config on mount
     useEffect(() => {
-        fetch("/api/config")
-            .then((r) => r.json())
-            .then((data) => setIgConfig(data))
-            .catch(() => { });
-
         if (storeId) {
             supabase
                 .from("stores")
-                .select("name")
+                .select("name, program_id")
                 .eq("id", storeId)
                 .single()
-                .then(({ data, error }: { data: { name: string } | null, error: unknown }) => {
-                    if (data && !error) setStoreName(data.name);
+                .then(({ data, error }: { data: { name: string; program_id: string } | null, error: unknown }) => {
+                    if (data && !error) {
+                        setStoreName(data.name);
+                        const url = data.program_id
+                            ? `/api/config?program_id=${encodeURIComponent(data.program_id)}`
+                            : "/api/config";
+                        fetch(url)
+                            .then((r) => r.json())
+                            .then((cfg) => setIgConfig(cfg))
+                            .catch(() => { });
+                    } else {
+                        fetch("/api/config")
+                            .then((r) => r.json())
+                            .then((cfg) => setIgConfig(cfg))
+                            .catch(() => { });
+                    }
                     setStoreNameLoading(false);
                 });
         } else {
+            fetch("/api/config")
+                .then((r) => r.json())
+                .then((cfg) => setIgConfig(cfg))
+                .catch(() => { });
             setStoreNameLoading(false);
         }
     }, [storeId]);
@@ -231,8 +246,8 @@ function RedeemForm() {
                 {/* Cream Header */}
                 <div className="redeem-header">
                     <img
-                        src="/icon.png"
-                        alt="Mokin x Gajeto"
+                        src={igConfig.icon_url || "/icon.png"}
+                        alt="Program Logo"
                         style={{ width: "auto", height: "7.5rem", objectFit: "contain", marginBottom: "1.25rem", display: "block", marginLeft: "auto", marginRight: "auto" }}
                     />
                     <h1>Redeem Your Offer</h1>
