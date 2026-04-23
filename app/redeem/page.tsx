@@ -72,6 +72,7 @@ function RedeemForm() {
     const [igConfig, setIgConfig] = useState<ProgramConfig>(DEFAULT_CONFIG);
 
     const [storeNameLoading, setStoreNameLoading] = useState(true);
+    const [configLoaded, setConfigLoaded] = useState(false);
 
     // Logo load state
     const [logoLoaded, setLogoLoaded] = useState(false);
@@ -93,29 +94,31 @@ function RedeemForm() {
                             : "/api/config";
                         fetch(url)
                             .then((r) => r.json())
-                            .then((cfg) => setIgConfig(cfg))
-                            .catch(() => { });
+                            .then((cfg) => { setIgConfig(cfg); setConfigLoaded(true); })
+                            .catch(() => { setConfigLoaded(true); });
                     } else {
                         fetch("/api/config")
                             .then((r) => r.json())
-                            .then((cfg) => setIgConfig(cfg))
-                            .catch(() => { });
+                            .then((cfg) => { setIgConfig(cfg); setConfigLoaded(true); })
+                            .catch(() => { setConfigLoaded(true); });
                     }
                     setStoreNameLoading(false);
                 });
         } else {
             fetch("/api/config")
                 .then((r) => r.json())
-                .then((cfg) => setIgConfig(cfg))
-                .catch(() => { });
+                .then((cfg) => { setIgConfig(cfg); setConfigLoaded(true); })
+                .catch(() => { setConfigLoaded(true); });
             setStoreNameLoading(false);
         }
     }, [storeId]);
 
-    // Reset logo state when icon URL changes (e.g. after API config loads)
+    // Reset logo state when icon URL changes to a new value
     useEffect(() => {
-        setLogoLoaded(false);
-        setLogoError(false);
+        if (igConfig.icon_url) {
+            setLogoLoaded(false);
+            setLogoError(false);
+        }
     }, [igConfig.icon_url]);
 
     // Check for duplicate when both email and phone are filled (debounced)
@@ -255,7 +258,7 @@ function RedeemForm() {
             <div className="redeem-card animate-fade-in-up">
                 {/* Cream Header */}
                 <div className="redeem-header">
-                    {!logoLoaded && !logoError && (
+                    {!configLoaded || (igConfig.icon_url && !logoLoaded && !logoError) ? (
                         <div
                             className="shimmer"
                             style={{
@@ -266,24 +269,26 @@ function RedeemForm() {
                                 margin: "0 auto 1.25rem",
                             }}
                         />
+                    ) : null}
+                    {configLoaded && igConfig.icon_url && (
+                        <img
+                            src={igConfig.icon_url}
+                            alt="Program Logo"
+                            onLoad={() => setLogoLoaded(true)}
+                            onError={() => { setLogoError(true); setLogoLoaded(true); }}
+                            style={{
+                                width: "auto",
+                                height: "7.5rem",
+                                objectFit: "contain",
+                                marginBottom: "1.25rem",
+                                display: logoLoaded ? "block" : "none",
+                                marginLeft: "auto",
+                                marginRight: "auto",
+                                opacity: logoLoaded ? 1 : 0,
+                                transition: "opacity 0.3s ease",
+                            }}
+                        />
                     )}
-                    <img
-                        src={igConfig.icon_url || "/icon.png"}
-                        alt="Program Logo"
-                        onLoad={() => setLogoLoaded(true)}
-                        onError={() => { setLogoError(true); setLogoLoaded(true); }}
-                        style={{
-                            width: "auto",
-                            height: "7.5rem",
-                            objectFit: "contain",
-                            marginBottom: "1.25rem",
-                            display: logoLoaded ? "block" : "none",
-                            marginLeft: "auto",
-                            marginRight: "auto",
-                            opacity: logoLoaded ? 1 : 0,
-                            transition: "opacity 0.3s ease",
-                        }}
-                    />
                     <h1>Redeem Your 20W MOKiN Charger</h1>
                     {storeName ? (
                         <p className="store-name">at {storeName}</p>
