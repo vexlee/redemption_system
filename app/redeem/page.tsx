@@ -73,6 +73,10 @@ function RedeemForm() {
 
     const [storeNameLoading, setStoreNameLoading] = useState(true);
 
+    // Logo load state
+    const [logoLoaded, setLogoLoaded] = useState(false);
+    const [logoError, setLogoError] = useState(false);
+
     // Fetch store name + Instagram config on mount
     useEffect(() => {
         if (storeId) {
@@ -107,6 +111,12 @@ function RedeemForm() {
             setStoreNameLoading(false);
         }
     }, [storeId]);
+
+    // Reset logo state when icon URL changes (e.g. after API config loads)
+    useEffect(() => {
+        setLogoLoaded(false);
+        setLogoError(false);
+    }, [igConfig.icon_url]);
 
     // Check for duplicate when both email and phone are filled (debounced)
     const triggerDuplicateCheck = (emailVal: string, phoneVal: string) => {
@@ -245,10 +255,34 @@ function RedeemForm() {
             <div className="redeem-card animate-fade-in-up">
                 {/* Cream Header */}
                 <div className="redeem-header">
+                    {!logoLoaded && !logoError && (
+                        <div
+                            className="shimmer"
+                            style={{
+                                width: "7.5rem",
+                                height: "7.5rem",
+                                borderRadius: "1rem",
+                                background: "rgba(22,210,196,0.1)",
+                                margin: "0 auto 1.25rem",
+                            }}
+                        />
+                    )}
                     <img
                         src={igConfig.icon_url || "/icon.png"}
                         alt="Program Logo"
-                        style={{ width: "auto", height: "7.5rem", objectFit: "contain", marginBottom: "1.25rem", display: "block", marginLeft: "auto", marginRight: "auto" }}
+                        onLoad={() => setLogoLoaded(true)}
+                        onError={() => { setLogoError(true); setLogoLoaded(true); }}
+                        style={{
+                            width: "auto",
+                            height: "7.5rem",
+                            objectFit: "contain",
+                            marginBottom: "1.25rem",
+                            display: logoLoaded ? "block" : "none",
+                            marginLeft: "auto",
+                            marginRight: "auto",
+                            opacity: logoLoaded ? 1 : 0,
+                            transition: "opacity 0.3s ease",
+                        }}
                     />
                     <h1>Redeem Your 20W MOKiN Charger</h1>
                     {storeName ? (
