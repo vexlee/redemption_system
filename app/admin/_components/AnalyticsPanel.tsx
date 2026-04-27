@@ -14,11 +14,13 @@ import {
     Cell,
 } from "recharts"
 import { exportRedemptionsCSV } from "@/lib/export"
+import { RedemptionTable } from "./RedemptionTable"
 import type { StoreData, RedemptionRow } from "@/lib/types"
 
 interface AnalyticsPanelProps {
     stores: StoreData[]
     redemptions: RedemptionRow[]
+    onRefresh: () => void
 }
 
 type Preset = "7d" | "30d" | "90d" | "custom"
@@ -35,7 +37,7 @@ function subtractDays(d: Date, n: number) {
     return copy
 }
 
-export function AnalyticsPanel({ stores, redemptions }: AnalyticsPanelProps) {
+export function AnalyticsPanel({ stores, redemptions, onRefresh }: AnalyticsPanelProps) {
     const today = new Date()
     const [preset, setPreset] = useState<Preset>("30d")
     const [customStart, setCustomStart] = useState(toDateStr(subtractDays(today, 30)))
@@ -58,7 +60,7 @@ export function AnalyticsPanel({ stores, redemptions }: AnalyticsPanelProps) {
     const filtered = useMemo(
         () =>
             redemptions.filter((r) => {
-                const d = r.created_at.split("T")[0]
+                const d = r.created_at.slice(0, 10)
                 return d >= startDate && d <= endDate
             }),
         [redemptions, startDate, endDate]
@@ -284,6 +286,14 @@ export function AnalyticsPanel({ stores, redemptions }: AnalyticsPanelProps) {
                     </div>
                 )}
             </div>
+
+            {/* Redemption list for the selected range */}
+            <RedemptionTable
+                redemptions={filtered}
+                onRefresh={onRefresh}
+                title={`Redemptions (${startDate} → ${endDate})`}
+                limit={null}
+            />
         </div>
     )
 }

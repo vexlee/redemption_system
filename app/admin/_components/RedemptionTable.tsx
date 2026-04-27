@@ -9,10 +9,14 @@ import type { RedemptionRow } from "@/lib/types"
 interface RedemptionTableProps {
     redemptions: RedemptionRow[]
     onRefresh: () => void
+    title?: string
+    limit?: number | null
 }
 
-export function RedemptionTable({ redemptions, onRefresh }: RedemptionTableProps) {
+export function RedemptionTable({ redemptions, onRefresh, title = "Recent Redemptions", limit = 10 }: RedemptionTableProps) {
     const [deletingId, setDeletingId] = useState<number | null>(null)
+    const visible = limit == null ? redemptions : redemptions.slice(0, limit)
+    const truncated = limit != null && redemptions.length > limit
 
     const handleDelete = async () => {
         if (deletingId === null) return
@@ -25,7 +29,7 @@ export function RedemptionTable({ redemptions, onRefresh }: RedemptionTableProps
         <>
             <div className="bg-[#242427] rounded-3xl p-7 border border-[#333]">
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-white text-lg font-semibold">Recent Redemptions</h3>
+                    <h3 className="text-white text-lg font-semibold">{title}</h3>
                     <button
                         onClick={() => exportRedemptionsCSV(redemptions)}
                         disabled={redemptions.length === 0}
@@ -38,7 +42,7 @@ export function RedemptionTable({ redemptions, onRefresh }: RedemptionTableProps
 
                 {/* Mobile card layout */}
                 <div className="md:hidden space-y-3">
-                    {redemptions.slice(0, 10).map((r) => {
+                    {visible.map((r) => {
                         const d = new Date(r.created_at)
                         return (
                             <div key={r.id} className="bg-[#18181b] rounded-2xl p-4 border border-[#333] group">
@@ -69,9 +73,9 @@ export function RedemptionTable({ redemptions, onRefresh }: RedemptionTableProps
                     {redemptions.length === 0 && (
                         <div className="py-10 text-center text-[#52525b] text-[15px]">No redemptions yet.</div>
                     )}
-                    {redemptions.length > 10 && (
+                    {truncated && (
                         <p className="text-center text-[#52525b] text-[13px] pt-2">
-                            Showing 10 of {redemptions.length} — export CSV to see all
+                            Showing {visible.length} of {redemptions.length} — export CSV to see all
                         </p>
                     )}
                 </div>
@@ -89,7 +93,7 @@ export function RedemptionTable({ redemptions, onRefresh }: RedemptionTableProps
                             </tr>
                         </thead>
                         <tbody>
-                            {redemptions.slice(0, 10).map((r) => {
+                            {visible.map((r) => {
                                 const d = new Date(r.created_at)
                                 return (
                                     <tr
@@ -142,9 +146,9 @@ export function RedemptionTable({ redemptions, onRefresh }: RedemptionTableProps
                         </div>
                     )}
 
-                    {redemptions.length > 10 && (
+                    {truncated && (
                         <p className="text-center text-[#52525b] text-[13px] pt-4 pb-2">
-                            Showing 10 of {redemptions.length} — export CSV to see all
+                            Showing {visible.length} of {redemptions.length} — export CSV to see all
                         </p>
                     )}
                 </div>

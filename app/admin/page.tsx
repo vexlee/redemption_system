@@ -202,7 +202,7 @@ function AdminPageInner() {
                             )}
 
                             {activeNav === "analytics" && (
-                                <AnalyticsPanel stores={stores} redemptions={redemptions} />
+                                <AnalyticsPanel stores={stores} redemptions={redemptions} onRefresh={handleRefresh} />
                             )}
 
                             {activeNav === "settings" && (
