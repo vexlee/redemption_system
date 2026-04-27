@@ -24,14 +24,8 @@ interface ProgramConfig {
 }
 
 const DEFAULT_CONFIG: ProgramConfig = {
-    mokin: {
-        url: "https://www.instagram.com/aukey.malaysia?igsh=eDY5ZWZ1M2ZhcHV5",
-        label: "Mokin Malaysia",
-    },
-    gajeto: {
-        url: "https://www.instagram.com/gajetomalaysia?igsh=MWVyYm9ldWppbm5raA==",
-        label: "Gajeto Malaysia",
-    },
+    mokin: { url: "", label: "" },
+    gajeto: { url: "", label: "" },
     icon_url: null,
 };
 
@@ -381,30 +375,45 @@ function RedeemForm() {
                         <div className="redeem-ig-section" style={{ marginBottom: "0.25rem" }}>
                             <label>Follow Us on Instagram</label>
                             <div className="redeem-ig-grid">
-                                <a
-                                    href={igConfig.mokin.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => setMokinClicked(true)}
-                                    className={`redeem-ig-btn ${mokinClicked ? "followed" : ""}`}
-                                >
-                                    <Instagram className="ig-icon" style={{ color: mokinClicked ? "#10B981" : "#FFFFFF" }} />
-                                    <span className="ig-label" style={{ color: mokinClicked ? "#10B981" : "#FFFFFF" }}>
-                                        {igConfig.mokin.label}
-                                    </span>
-                                </a>
-                                <a
-                                    href={igConfig.gajeto.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => setGajetoClicked(true)}
-                                    className={`redeem-ig-btn ${gajetoClicked ? "followed" : ""}`}
-                                >
-                                    <Instagram className="ig-icon" style={{ color: gajetoClicked ? "#10B981" : "#FFFFFF" }} />
-                                    <span className="ig-label" style={{ color: gajetoClicked ? "#10B981" : "#FFFFFF" }}>
-                                        {igConfig.gajeto.label}
-                                    </span>
-                                </a>
+                                {!configLoaded ? (
+                                    <>
+                                        <div className="shimmer" style={{ height: "3rem", borderRadius: "0.75rem", background: "rgba(253,246,236,0.1)" }} />
+                                        <div className="shimmer" style={{ height: "3rem", borderRadius: "0.75rem", background: "rgba(253,246,236,0.1)" }} />
+                                    </>
+                                ) : (
+                                    <>
+                                        <a
+                                            href={igConfig.mokin.url || "#"}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => {
+                                                if (!igConfig.mokin.url) { e.preventDefault(); return; }
+                                                setMokinClicked(true);
+                                            }}
+                                            className={`redeem-ig-btn ${mokinClicked ? "followed" : ""}`}
+                                        >
+                                            <Instagram className="ig-icon" style={{ color: mokinClicked ? "#10B981" : "#FFFFFF" }} />
+                                            <span className="ig-label" style={{ color: mokinClicked ? "#10B981" : "#FFFFFF" }}>
+                                                {igConfig.mokin.label}
+                                            </span>
+                                        </a>
+                                        <a
+                                            href={igConfig.gajeto.url || "#"}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => {
+                                                if (!igConfig.gajeto.url) { e.preventDefault(); return; }
+                                                setGajetoClicked(true);
+                                            }}
+                                            className={`redeem-ig-btn ${gajetoClicked ? "followed" : ""}`}
+                                        >
+                                            <Instagram className="ig-icon" style={{ color: gajetoClicked ? "#10B981" : "#FFFFFF" }} />
+                                            <span className="ig-label" style={{ color: gajetoClicked ? "#10B981" : "#FFFFFF" }}>
+                                                {igConfig.gajeto.label}
+                                            </span>
+                                        </a>
+                                    </>
+                                )}
                             </div>
                         </div>
 
